@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="SAM-MT: Real-Time Interactive Multi-Target Video Segmentation">
+  <meta name="description" content="SAM-MT enables real-time interactive multi-target video segmentation by representing individual targets with lightweight queries while sharing global context.">
+  <meta name="keywords" content="SAM-MT, video object segmentation, multi-target segmentation, Segment Anything 2, SAM2, interactive segmentation, target queries, sparse memory, computer vision">
+  <meta name="author" content="Ruiqi Shen, Chang Liu, Henghui Ding">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Fudan CVL">
+  <meta property="og:title" content="SAM-MT: Real-Time Interactive Multi-Target Video Segmentation">
+  <meta property="og:description" content="SAM-MT decouples latency from target count for real-time interactive multi-target video segmentation.">
+  <meta property="og:url" content="https://henghuiding.com/SAM-MT/">
+  <meta property="og:image" content="https://henghuiding.com/SAM-MT/static/images/social_preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="SAM-MT - Research Preview">
+  <meta property="article:published_time" content="2026-01-01T00:00:00.000Z">
+  <meta property="article:author" content="Ruiqi Shen">
+  <meta property="article:section" content="Research">
+  <meta property="article:tag" content="Video Object Segmentation">
+  <meta property="article:tag" content="Multi-Target Segmentation">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SAM-MT: Real-Time Interactive Multi-Target Video Segmentation">
+  <meta name="twitter:description" content="Real-time interactive multi-target video segmentation with target queries, decoupled masked attention, and query-based sparse memory.">
+  <meta name="twitter:image" content="https://henghuiding.com/SAM-MT/static/images/social_preview.png">
+  <meta name="twitter:image:alt" content="SAM-MT - Research Preview">
+
+  <!-- Academic/Research Specific -->
+  <meta name="citation_title" content="SAM-MT: Real-Time Interactive Multi-Target Video Segmentation">
+  <meta name="citation_author" content="Shen, Ruiqi">
+  <meta name="citation_author" content="Liu, Chang">
+  <meta name="citation_author" content="Ding, Henghui">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference_title" content="CONFERENCE_NAME">
+  <meta name="citation_pdf_url" content="https://henghuiding.com/SAM-MT/static/pdfs/paper.pdf">
+
+  <meta name="theme-color" content="#2563eb">
+  <meta name="msapplication-TileColor" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://ajax.googleapis.com">
+  <link rel="preconnect" href="https://documentcloud.adobe.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+  <title>SAM-MT</title>
+
+  <!-- Favicon and App Icons -->
+  <link rel="icon" type="image/jpeg" href="static/images/fudancvl.png">
+  <link rel="apple-touch-icon" href="static/images/fudancvl.png">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+
+  <!-- JavaScript -->
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+
+  <style>
+    .sammt-card {
+      border-radius: 18px;
+      padding: 1.25rem;
+      background: #ffffff;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+      height: 100%;
+    }
+
+    .sammt-card h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .sammt-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .video-grid video,
+    .result-figure img {
+      width: 100%;
+      height: auto;
+      border-radius: 14px;
+      box-shadow: 0 6px 22px rgba(0, 0, 0, 0.10);
+    }
+
+    .metric-highlight {
+      font-weight: 700;
+      color: #1d4ed8;
+    }
+
+    .hero-video-caption {
+      margin-top: 0.5rem;
+      color: #4b5563;
+      font-size: 0.95rem;
+    }
+
+    .result-figure {
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .result-title {
+      margin-bottom: 1rem;
+    }
+
+    .result-caption {
+      color: #4b5563;
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+
+    .teaser-box {
+      border-radius: 18px;
+      overflow: hidden;
+      background: #f8fafc;
+      padding: 1rem;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    }
+
+    .numbers-row {
+      margin-top: 1.5rem;
+    }
+
+    .number-card {
+      border-radius: 16px;
+      padding: 1.2rem;
+      text-align: center;
+      background: #f8fafc;
+      height: 100%;
+    }
+
+    .number-card .number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1d4ed8;
+      line-height: 1.1;
+    }
+
+    .number-card .label {
+      margin-top: 0.4rem;
+      color: #4b5563;
+      font-size: 0.95rem;
+    }
+  </style>
+
+  <!-- Structured Data for Academic Papers -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "SAM-MT: Real-Time Interactive Multi-Target Video Segmentation",
+    "description": "SAM-MT is an interactive multi-target video segmentation framework that represents individual targets with lightweight queries, shares global context, and maintains real-time efficiency as target count increases.",
+    "author": [
+      {
+        "@type": "Person",
+        "name": "Ruiqi Shen",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "Fudan University"
+        }
+      },
+      {
+        "@type": "Person",
+        "name": "Chang Liu",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "Shanghai University of Finance and Economics"
+        }
+      },
+      {
+        "@type": "Person",
+        "name": "Henghui Ding",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "Fudan University"
+        }
+      }
+    ],
+    "datePublished": "2026-01-01",
+    "publisher": {
+      "@type": "Organization",
+      "name": "CONFERENCE_OR_JOURNAL_NAME"
+    },
+    "url": "https://henghuiding.com/SAM-MT/",
+    "image": "https://henghuiding.com/SAM-MT/static/images/social_preview.png",
+    "keywords": [
+      "video object segmentation",
+      "multi-target segmentation",
+      "SAM2",
+      "interactive segmentation",
+      "target queries"
+    ],
+    "abstract": "SAM-MT transforms SAM2 into a real-time interactive multi-target video segmentation framework by combining shared global context with target-specific queries, decoupled masked attention, and query-based sparse memory.",
+    "isAccessibleForFree": true
+  }
+  </script>
+</head>
+
+<body>
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <main id="main-content">
+
+    <!-- Title -->
+    <section class="hero">
+      <div class="hero-body">
+        <div class="container is-max-desktop">
+          <div class="columns is-centered">
+            <div class="column has-text-centered">
+              <h1 class="title is-1 publication-title">
+                <span class="title-method">SAM-MT</span><br>
+                <span class="title-subtitle">Real-Time Interactive Multi-Target Video Segmentation</span>
+              </h1>
+
+              <div class="is-size-5 publication-authors">
+                <span class="author-block">
+                  <a href="javascript:void(0);">Ruiqi Shen</a><sup>1</sup>,
+                </span>
+                <span class="author-block">
+                  <a href="https://scholar.google.com/citations?user=XlQP0GIAAAAJ&hl=zh-CN" target="_blank">Chang Liu</a><sup>2</sup>,
+                </span>
+                <span class="author-block">
+                  <a href="https://henghuiding.com/" target="_blank">Henghui Ding</a><sup>1</sup>
+                </span>
+              </div>
+
+              <div class="is-size-5 publication-authors">
+                <span class="author-block">
+                  <sup>1</sup>Fudan University <br>
+                  <sup>2</sup>Shanghai University of Finance and Economics
+                </span>
+                <br>
+                  <font color="#FF6403"><b>ECCV 2026</b></font></span>
+              </div>
+
+              <div class="publication-links" style="margin-top: 1rem;">
+                <span class="link-block">
+                  <a href="https://arxiv.org/abs/<ARXIV_PAPER_ID>" target="_blank"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="https://github.com/FudanCVL/SAM-MT" target="_blank"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+
+                <span class="link-block">
+                  <a href="https://huggingface.co/FudanCVL/SAM-MT" target="_blank"
+                     class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon">
+                      <img src="static/images/hf-logo-pirate.svg" alt="Hugging Face"
+                           style="height: 1.25em; width: auto; display: block;">
+                    </span>
+                    <span>Model</span>
+                  </a>
+                </span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End Title -->
+
+    
+    <!-- Interactive Demo -->
+    <section class="section hero interactive-demo-section" id="interactive-demo">
+      <div class="container is-max-widescreen">
+        <h2 class="title is-3 has-text-centered">Interactive Demo</h2>
+        <div class="ytWrap">
+          <iframe
+            class="ytFrame"
+            width="560"
+            height="315"
+            src="https://www.youtube.com/embed/7jfXnH3rsKA?si=6WtfalAeNjIwQzR8"
+            title="YouTube video player"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen
+          ></iframe>
+        </div>
+
+        <p class="subtitle has-text-centered" style="margin-top: 0.75rem;">
+          <span class="title-method">SAM-MT</span> supports simple point-based multi-target initialization and real-time video segmentation.
+        </p>
+      </div>
+    </section>
+    <!-- End Interactive Demo -->
+
+    <!-- Abstract -->
+    <section class="section hero is-light abstract-section">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Abstract</h2>
+            <div class="content has-text-justified">
+              <p>
+                Modern video object segmentation tracks and segments user-specified targets.
+                While recent approaches such as SAM2 achieve strong single-target performance,
+                extending them to multi-target scenarios usually requires repeating object-wise
+                propagation for each target, causing latency and memory usage to grow with target count.
+                We present <strong>SAM-MT</strong>, a real-time interactive multi-target video segmentation
+                framework built upon SAM2. SAM-MT represents the scene with shared global context
+                and represents each target with lightweight explicit queries. It uses decoupled
+                masked attention to prevent cross-target interference, a query-based sparse memory
+                to preserve target identities over time, and an identity transformer for robust
+                target re-identification. This design largely decouples latency from the number
+                of targets, enabling real-time multi-target segmentation with robust video segmentation performance.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End Abstract -->
+
+
+    <!-- Method -->
+    <section class="section hero">
+      <div class="container is-max-desktop">
+        <h2 class="title is-3 has-text-centered">Architecture</h2>
+
+        <div class="content has-text-justified">
+          <p>
+            <strong>SAM-MT</strong> converts SAM2 from object-wise propagation into a query-driven
+            multi-target framework. Dense memory (of SAM2) is used only once to model the combined global context,
+            while each individual target is represented by a compact target query. In the decoder,
+            decoupled masked attention allows all target queries to access the shared global queries,
+            but blocks direct attention between different targets. Across frames, historical target
+            queries are stored in a FIFO sparse memory, and an identity transformer updates each
+            target only from its own history to avoid identity drift.
+          </p>
+        </div>
+
+        <figure class="has-text-centered" style="margin-top: 1.5rem;">
+          <img src="static/images/overview.jpg"
+               alt="SAM-MT framework overview"
+               loading="lazy"
+               style="width: 100%; height: auto; border-radius: 14px;">
+        </figure>
+
+        <div class="columns is-centered" style="margin-top: 1.5rem;">
+          <div class="column">
+            <div class="sammt-card">
+              <span class="sammt-badge">Target Queries</span>
+              <h3 class="title is-5">Explicit target identity</h3>
+              <p>
+                Each user-specified target is represented by a lightweight query,
+                avoiding repeated object-wise SAM2 propagation.
+              </p>
+            </div>
+          </div>
+
+          <div class="column">
+            <div class="sammt-card">
+              <span class="sammt-badge">Decoupled Masked Attention</span>
+              <h3 class="title is-5">Identity-preserving attention</h3>
+              <p>
+                Different targets are isolated from each other to reduce cross-target interference, while still sharing
+                global context.
+              </p>
+            </div>
+          </div>
+
+          <div class="column">
+            <div class="sammt-card">
+              <span class="sammt-badge">Sparse Memory</span>
+              <h3 class="title is-5">Efficient temporal modeling</h3>
+              <p>
+                Queries are stored into sparse memory instead of pixel-level features, reducing per-target overhead for scalability.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End Method -->
+
+    <!-- Results -->
+    <section class="section hero results-section">
+      <div class="container is-max-widescreen">
+        <h2 class="title is-3 has-text-centered">Quantitative Results</h2>
+
+        <div class="content has-text-justified results-intro">
+          <p>
+            <em>SAM-MT</em> achieves competitive video segmentation performance across VOS benchmarks.
+            More importantly, it maintains real-time speed as the number of targets increases,
+            such as sustaining <span class="metric-highlight">35+ FPS with 20 targets</span>
+            with low VRAM overhead.
+          </p>
+        </div>
+
+        <div class="quant-layout">
+          <figure class="quant-card quant-card-left">
+            <h3 class="title is-4 has-text-centered result-title">VOS Performance</h3>
+            <div class="quant-img-wrap">
+              <img src="static/images/quant.png"
+                  alt="SAM-MT quantitative results on VOS benchmarks"
+                  loading="lazy">
+            </div>
+          </figure>
+
+          <div class="quant-right">
+            <figure class="quant-card">
+              <h3 class="title is-4 has-text-centered result-title">FPS vs. Number of Targets</h3>
+              <div class="quant-img-wrap">
+                <img src="static/images/fps.png"
+                    alt="SAM-MT FPS scalability comparison"
+                    loading="lazy">
+              </div>
+            </figure>
+
+            <figure class="quant-card">
+              <h3 class="title is-4 has-text-centered result-title">VRAM vs. Number of Targets</h3>
+              <div class="quant-img-wrap">
+                <img src="static/images/vram.png"
+                    alt="SAM-MT VRAM scalability comparison"
+                    loading="lazy">
+              </div>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- End Results -->
+
+    <!-- Qualitative Results -->
+    <section class="section hero results-section">
+      <div class="container is-max-widescreen">
+        <h2 class="title is-3 has-text-centered">Qualitative Results</h2>
+
+        <p class="result-caption has-text-centered" style="margin-bottom: 1rem;">
+          <span class="title-method">SAM-MT</span> tracks and segments many targets simultaneously
+          while preserving individual identities in crowded scenes.
+        </p>
+
+        <img src="static/images/dense.jpg"
+            alt="SAM-MT qualitative results in dense multi-target scenes"
+            loading="lazy"
+            style="width: 90%; display: block; margin: 0 auto; border-radius: 14px;">
+      </div>
+    </section>
+    <!-- End Qualitative Results -->
+
+    <!-- BibTeX -->
+    <section class="section" id="BibTeX">
+      <div class="container is-max-desktop content">
+        <div class="bibtex-header">
+          <h2 class="title">BibTeX</h2>
+          <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+            <i class="fas fa-copy"></i>
+            <span class="copy-text">Copy</span>
+          </button>
+        </div>
+
+        <pre id="bibtex-code"><code>@inproceedings{SAMMT,
+  title={{SAM-MT}: Real-Time Interactive Multi-Target Video Segmentation},
+  author={Shen, Ruiqi and Liu, Chang and Ding, Henghui},
+  booktitle={European Conference on Computer Vision (ECCV)},
+  year={2026}
+}</code></pre>
+      </div>
+    </section>
+    <!-- End BibTeX -->
+
+  </main>
+
+  <footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+            <center><font size=2>© <a href="https://github.com/FudanCVL" target="_blank">FudanCVL</a> | Last updated: 09/07/2026</font></center>
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
