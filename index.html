@@ -272,7 +272,7 @@
 
               <div class="publication-links" style="margin-top: 1rem;">
                 <span class="link-block">
-                  <a href="https://arxiv.org/abs/<ARXIV_PAPER_ID>" target="_blank"
+                  <a href="https://arxiv.org/abs/2607.08688" target="_blank"
                      class="external-link button is-normal is-rounded is-dark">
                     <span class="icon">
                       <i class="ai ai-arxiv"></i>
@@ -313,24 +313,26 @@
     
     <!-- Interactive Demo -->
     <section class="section hero interactive-demo-section" id="interactive-demo">
-      <div class="container is-max-widescreen">
+      <div class="container is-max-desktop">
         <h2 class="title is-3 has-text-centered">Interactive Demo</h2>
-        <div class="ytWrap">
-          <iframe
-            class="ytFrame"
-            width="784"
-            height="504"
-            src="https://www.youtube.com/embed/l0Xqoy04KX0?si=YTEsdNi5fWpuqQ7j"
-            title="YouTube video player"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-          ></iframe>
+      </div>
+      <div class="youtube-section-container">
+        <div class="youtube-wrapper">
+          <div class="youtube-facade"
+              data-video-id="l0Xqoy04KX0"
+              role="button"
+              tabindex="0"
+              aria-label="Play SAM-MT interactive demo video">
+            <img src="https://img.youtube.com/vi/W-eQa8oBnfA/maxresdefault.jpg"
+                alt="SAM-MT Interactive Demo"
+                loading="lazy">
+            <div class="youtube-play-btn" aria-hidden="true"></div>
+          </div>
         </div>
-
+      </div>
+      <div class="container is-max-desktop">
         <p class="subtitle has-text-centered" style="margin-top: 0.75rem;">
-          <span class="title-method">SAM-MT</span> supports simple point-based multi-target initialization and real-time video segmentation.
+          <span class="title-method">SAM-MT</span> supports click-based real-time multi-target video segmentation regardless of target count.
         </p>
       </div>
     </section>
