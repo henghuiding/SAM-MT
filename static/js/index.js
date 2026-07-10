@@ -140,3 +140,29 @@ $(document).ready(function() {
     setupVideoCarouselAutoplay();
 
 })
+
+
+function loadYouTubeVideo(facade) {
+    if (facade.dataset.loaded) return;
+    facade.dataset.loaded = 'true';
+  
+    const videoId = facade.dataset.videoId;
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    iframe.title = 'SAM-MT Interactive Demo';
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    iframe.allowFullscreen = true;
+  
+    facade.innerHTML = '';
+    facade.appendChild(iframe);
+  }
+  
+  document.querySelectorAll('.youtube-facade').forEach((facade) => {
+    facade.addEventListener('click', () => loadYouTubeVideo(facade));
+    facade.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        loadYouTubeVideo(facade);
+      }
+    });
+  });
